@@ -14,22 +14,14 @@ end
 mon.setTextScale(0.5)
 mon.setBackgroundColor(colors.black)
 mon.setTextColor(colors.white)
-mon.clear()
 
 local function prettifyItemName(rawName)
     local name = rawName
-
-    -- Mod-Präfix entfernen
     name = string.match(name, ":(.+)") or name
-
-    -- Unterstriche durch Leerzeichen ersetzen
     name = string.gsub(name, "_", " ")
-
-    -- Jeden Wortanfang groß machen
     name = string.gsub(name, "(%a)([%w']*)", function(first, rest)
         return string.upper(first) .. string.lower(rest)
     end)
-
     return name
 end
 
@@ -60,7 +52,6 @@ local function draw()
     mon.setBackgroundColor(colors.black)
     mon.clear()
 
-    -- Kopfzeile
     mon.setCursorPos(1, 1)
     mon.setTextColor(colors.cyan)
     mon.write("ME Storage Bus Items")
@@ -69,18 +60,21 @@ local function draw()
     mon.setTextColor(colors.lightGray)
     mon.write(string.rep("-", w))
 
-    local maxLines = h - 2
+    local maxLines = h - 3
+    local maxScroll = math.max(0, #items - maxLines)
+
+    if scroll > maxScroll then
+        scroll = maxScroll
+    end
 
     for i = 1, maxLines do
         local index = i + scroll
         local item = items[index]
-
         if not item then break end
 
         local y = i + 2
         local amountText = " x" .. tostring(item.amount)
-
-        local maxNameLen = w - #amountText
+        local maxNameLen = w - #amountText - 1
         local name = item.displayName
 
         if #name > maxNameLen then
@@ -96,26 +90,29 @@ local function draw()
         mon.write(amountText)
     end
 
-    -- Fußzeile
     mon.setCursorPos(1, h)
     mon.setTextColor(colors.gray)
-    mon.write("Up/Down scroll  R refresh")
+    mon.write("Auto refresh | Up/Down")
 end
 
-draw()
-
 while true do
-    local event, key = os.pullEvent("key")
+    draw()
 
-    if key == keys.up then
-        if scroll > 0 then
-            scroll = scroll - 1
-            draw()
+    local timer = os.startTimer(2)
+
+    while true do
+        local event, p1 = os.pullEvent()
+
+        if event == "timer" and p1 == timer then
+            break
+        elseif event == "key" then
+            if p1 == keys.up and scroll > 0 then
+                scroll = scroll - 1
+                draw()
+            elseif p1 == keys.down then
+                scroll = scroll + 1
+                draw()
+            end
         end
-    elseif key == keys.down then
-        scroll = scroll + 1
-        draw()
-    elseif key == keys.r then
-        draw()
     end
 end
