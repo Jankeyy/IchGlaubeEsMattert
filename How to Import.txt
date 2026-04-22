@@ -1,0 +1,1 @@
+wget  https://raw.githubusercontent.com/Jankeyy/IchGlaubeEsMattert/{Branch}/{FileName}.lua [Name to import into CC]
